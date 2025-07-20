@@ -1,10 +1,10 @@
-# Publishing Checklist for @oxog/delay v1.0.0
+# Publishing Checklist for @oxog/delay v1.0.1
 
 ## ✅ Pre-Publishing Verification Complete
 
 ### Documentation
 - ✅ README.md - Comprehensive with examples and API reference
-- ✅ CHANGELOG.md - Detailed v1.0.0 release notes
+- ✅ CHANGELOG.md - Updated with v1.0.1 release notes
 - ✅ LICENSE - MIT license included
 - ✅ API documentation in docs/
 - ✅ All examples tested and working
@@ -55,8 +55,14 @@ npm run publish:major  # For breaking changes (2.0.0)
 4. Monitor npm downloads and user feedback
 5. Set up CI/CD for automated testing
 
-## 📊 Package Stats
-- Package size: 38.7 kB (tarball)
-- Unpacked size: 254.2 kB
+## 📊 Package Stats (v1.0.1)
+- Package size: 38.9 kB (tarball)
+- Unpacked size: 254.8 kB
 - Total files: 94
 - Zero runtime dependencies
+
+## 🔄 Version 1.0.1 Changes
+- ESLint compatibility improvements
+- TypeScript 5.8.3 support
+- Code quality enhancements
+- Memory optimization in test suite

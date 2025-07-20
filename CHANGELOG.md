@@ -1,6 +1,23 @@
+# Changelog
+
 ## [1.0.1] - 2025-07-20
 
-# Changelog
+### Fixed
+- ESLint compatibility with TypeScript 5.8.3
+- Fixed linting errors in core modules
+- Improved type safety in plugin system
+- Removed unnecessary type assertions
+- Fixed promise handling in setTimeout callbacks
+
+### Changed
+- Updated TypeScript configuration for better compatibility
+- Improved code quality based on ESLint recommendations
+- Enhanced type definitions for better inference
+
+### Technical Improvements
+- Better memory management in test suite
+- Optimized build process
+- Reduced package size through better tree-shaking
 
 All notable changes to this project will be documented in this file.
 
