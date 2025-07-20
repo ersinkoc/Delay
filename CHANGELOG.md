@@ -1,3 +1,5 @@
+## [1.0.2] - 2025-07-20
+
 # Changelog
 
 ## [1.0.1] - 2025-07-20
@@ -155,3 +157,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 For detailed information about each release, please check the [GitHub releases page](https://github.com/ersinkoc/delay/releases).
+
