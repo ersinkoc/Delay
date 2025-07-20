@@ -1,6 +1,6 @@
 {
   "name": "@oxog/delay",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A comprehensive, zero-dependency delay/timeout utility library with advanced timing features",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
