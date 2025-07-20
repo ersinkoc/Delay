@@ -1,8 +1,15 @@
+# Changelog
+
 ## [1.0.3] - 2025-07-20
+
+### Fixed
+- Added `publishConfig` to package.json to fix npm publish error for scoped packages
+- Set package access to public to allow publishing without private package subscription
 
 ## [1.0.2] - 2025-07-20
 
-# Changelog
+### Changed
+- Internal version bump (not published)
 
 ## [1.0.1] - 2025-07-20
 
