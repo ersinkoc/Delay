@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@oxog/delay Browser Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .demo-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .demo-section h2 {
+            color: #34495e;
+            margin-top: 0;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .output {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+
+        .status.running {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status.completed {
+            background: #27ae60;
+            color: white;
+        }
+
+        .status.error {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .metric {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .input-group {
+            margin: 10px 0;
+        }
+
+        .input-group label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+        }
+
+        .input-group input, .input-group select {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            width: 200px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .controls button {
+                margin: 2px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 @oxog/delay Browser Demo</h1>
+        
+        <!-- Basic Delays Demo -->
+        <div class="demo-section">
+            <h2>⏰ Basic Delays</h2>
+            <div class="controls">
+                <div class="input-group">
+                    <label>Duration:</label>
+                    <input type="text" id="basicDelayInput" value="2s" placeholder="e.g., 2s, 1500ms, 1m 30s">
+                </div>
+                <button onclick="runBasicDelay()">Start Delay</button>
+                <button onclick="runProgressDelay()">Delay with Progress</button>
+            </div>
+            <div class="progress-bar" style="display: none;" id="basicProgress">
+                <div class="progress-fill" id="basicProgressFill"></div>
+            </div>
+            <div class="output" id="basicOutput">Ready to test basic delays...</div>
+        </div>
+
+        <!-- Cancellable Delays Demo -->
+        <div class="demo-section">
+            <h2>❌ Cancellable Delays</h2>
+            <div class="controls">
+                <button onclick="startCancellableDelay()">Start 5s Cancellable Delay</button>
+                <button onclick="cancelDelay()" id="cancelBtn" disabled>Cancel Delay</button>
+            </div>
+            <div class="output" id="cancellableOutput">Ready to test cancellable delays...</div>
+        </div>
+
+        <!-- Retry Demo -->
+        <div class="demo-section">
+            <h2>🔄 Retry Mechanism</h2>
+            <div class="controls">
+                <div class="input-group">
+                    <label>Success Rate:</label>
+                    <select id="successRate">
+                        <option value="0.3">30% (Hard)</option>
+                        <option value="0.5" selected>50% (Medium)</option>
+                        <option value="0.7">70% (Easy)</option>
+                    </select>
+                </div>
+                <button onclick="runRetryDemo()">Test Retry</button>
+                <button onclick="runRetryWithBackoff()">Retry with Backoff</button>
+            </div>
+            <div class="metrics" id="retryMetrics" style="display: none;">
+                <div class="metric">
+                    <div class="metric-value" id="attemptCount">0</div>
+                    <div class="metric-label">Attempts</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="totalTime">0ms</div>
+                    <div class="metric-label">Total Time</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="retryStatus">-</div>
+                    <div class="metric-label">Status</div>
+                </div>
+            </div>
+            <div class="output" id="retryOutput">Ready to test retry mechanism...</div>
+        </div>
+
+        <!-- Rate Limiting Demo -->
+        <div class="demo-section">
+            <h2>🚦 Rate Limiting</h2>
+            <div class="controls">
+                <button onclick="testThrottle()">Test Throttle (1s)</button>
+                <button onclick="testDebounce()">Test Debounce (500ms)</button>
+                <button onclick="spamButtons()" id="spamBtn">Spam Click Me!</button>
+            </div>
+            <div class="metrics" id="rateLimitMetrics">
+                <div class="metric">
+                    <div class="metric-value" id="clickCount">0</div>
+                    <div class="metric-label">Clicks</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="throttleCount">0</div>
+                    <div class="metric-label">Throttled</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="debounceCount">0</div>
+                    <div class="metric-label">Debounced</div>
+                </div>
+            </div>
+            <div class="output" id="rateLimitOutput">Ready to test rate limiting...</div>
+        </div>
+
+        <!-- Animation Demo -->
+        <div class="demo-section">
+            <h2>🎨 Animation Frame Delays</h2>
+            <div class="controls">
+                <button onclick="animateBox()">Animate Box</button>
+                <button onclick="smoothAnimation()">Smooth Animation</button>
+                <button onclick="stopAnimation()" id="stopAnimBtn" disabled>Stop Animation</button>
+            </div>
+            <div style="height: 60px; background: #ecf0f1; position: relative; border-radius: 5px; margin: 10px 0;">
+                <div id="animationBox" style="width: 40px; height: 40px; background: #e74c3c; border-radius: 50%; position: absolute; top: 10px; left: 10px; transition: none;"></div>
+            </div>
+            <div class="output" id="animationOutput">Ready to test animation delays...</div>
+        </div>
+
+        <!-- Plugin Demo -->
+        <div class="demo-section">
+            <h2>🔌 Plugin System</h2>
+            <div class="controls">
+                <button onclick="enableLogging()">Enable Logging</button>
+                <button onclick="enableMetrics()">Enable Metrics</button>
+                <button onclick="showMetrics()" id="showMetricsBtn" disabled>Show Metrics</button>
+                <button onclick="clearPlugins()">Clear Plugins</button>
+            </div>
+            <div class="metrics" id="pluginMetrics" style="display: none;">
+                <div class="metric">
+                    <div class="metric-value" id="totalDelays">0</div>
+                    <div class="metric-label">Total Delays</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="avgDelay">0ms</div>
+                    <div class="metric-label">Avg Delay</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="minDelay">∞</div>
+                    <div class="metric-label">Min Delay</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="maxDelay">0ms</div>
+                    <div class="metric-label">Max Delay</div>
+                </div>
+            </div>
+            <div class="output" id="pluginOutput">Ready to test plugin system...</div>
+        </div>
+    </div>
+
+    <!-- Load the delay library -->
+    <script type="module">
+        // For demo purposes, we'll simulate the delay library
+        // In a real implementation, you would import from the built package
+        import delay from './delay-browser.js';
+        
+        // Make it available globally for the demo
+        window.delay = delay;
+        
+        // Initialize demo
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 @oxog/delay browser demo loaded!');
+            log('basicOutput', '✅ @oxog/delay library loaded successfully!');
+        });
+    </script>
+
+    <script>
+        // Demo state
+        let currentCancellable = null;
+        let animationController = null;
+        let clickCount = 0;
+        let throttleCount = 0;
+        let debounceCount = 0;
+        
+        // Utility functions
+        function log(outputId, message, type = 'info') {
+            const output = document.getElementById(outputId);
+            const timestamp = new Date().toLocaleTimeString();
+            const line = `[${timestamp}] ${message}`;
+            output.innerHTML += line + '\n';
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function updateStatus(outputId, status, type = 'info') {
+            const output = document.getElementById(outputId);
+            const statusClass = type === 'error' ? 'error' : type === 'success' ? 'completed' : 'running';
+            const statusHtml = `<span class="status ${statusClass}">${status}</span>`;
+            log(outputId, statusHtml);
+        }
+
+        function updateProgress(progressId, percentage) {
+            const fill = document.getElementById(progressId);
+            if (fill) {
+                fill.style.width = percentage + '%';
+            }
+        }
+
+        // Basic Delays Demo
+        async function runBasicDelay() {
+            const input = document.getElementById('basicDelayInput').value;
+            log('basicOutput', `🚀 Starting delay: ${input}`);
+            updateStatus('basicOutput', 'Running...', 'running');
+            
+            try {
+                const start = Date.now();
+                await delay.for(input);
+                const elapsed = Date.now() - start;
+                log('basicOutput', `✅ Delay completed in ${elapsed}ms`);
+                updateStatus('basicOutput', 'Completed', 'success');
+            } catch (error) {
+                log('basicOutput', `❌ Error: ${error.message}`);
+                updateStatus('basicOutput', 'Error', 'error');
+            }
+        }
+
+        async function runProgressDelay() {
+            const input = document.getElementById('basicDelayInput').value;
+            const progressBar = document.getElementById('basicProgress');
+            
+            log('basicOutput', `🚀 Starting delay with progress: ${input}`);
+            progressBar.style.display = 'block';
+            updateProgress('basicProgressFill', 0);
+            updateStatus('basicOutput', 'Running with progress...', 'running');
+            
+            try {
+                await delay.for(input, {
+                    onProgress: (elapsed, total) => {
+                        const percentage = (elapsed / total) * 100;
+                        updateProgress('basicProgressFill', percentage);
+                        if (percentage % 20 < 1) { // Log every 20%
+                            log('basicOutput', `📊 Progress: ${Math.round(percentage)}%`);
+                        }
+                    },
+                    progressInterval: 50
+                });
+                
+                updateProgress('basicProgressFill', 100);
+                log('basicOutput', '✅ Progress delay completed!');
+                updateStatus('basicOutput', 'Completed', 'success');
+                
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                }, 2000);
+            } catch (error) {
+                log('basicOutput', `❌ Error: ${error.message}`);
+                updateStatus('basicOutput', 'Error', 'error');
+                progressBar.style.display = 'none';
+            }
+        }
+
+        // Cancellable Delays Demo
+        async function startCancellableDelay() {
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            log('cancellableOutput', '🚀 Starting 5 second cancellable delay...');
+            updateStatus('cancellableOutput', 'Running (cancellable)', 'running');
+            cancelBtn.disabled = false;
+            
+            currentCancellable = delay.cancellable(5000);
+            
+            try {
+                await currentCancellable;
+                log('cancellableOutput', '✅ Delay completed successfully!');
+                updateStatus('cancellableOutput', 'Completed', 'success');
+            } catch (error) {
+                if (currentCancellable.isCancelled()) {
+                    log('cancellableOutput', '🛑 Delay was cancelled!');
+                    updateStatus('cancellableOutput', 'Cancelled', 'error');
+                } else {
+                    log('cancellableOutput', `❌ Error: ${error.message}`);
+                    updateStatus('cancellableOutput', 'Error', 'error');
+                }
+            } finally {
+                cancelBtn.disabled = true;
+                currentCancellable = null;
+            }
+        }
+
+        function cancelDelay() {
+            if (currentCancellable) {
+                currentCancellable.cancel();
+                log('cancellableOutput', '🛑 Cancellation requested...');
+            }
+        }
+
+        // Retry Demo
+        async function runRetryDemo() {
+            const successRate = parseFloat(document.getElementById('successRate').value);
+            const metricsDiv = document.getElementById('retryMetrics');
+            
+            log('retryOutput', `🔄 Testing retry with ${successRate * 100}% success rate...`);
+            updateStatus('retryOutput', 'Retrying...', 'running');
+            metricsDiv.style.display = 'grid';
+            
+            let attempts = 0;
+            const startTime = Date.now();
+            
+            try {
+                const result = await delay.retry(async () => {
+                    attempts++;
+                    updateMetric('attemptCount', attempts);
+                    updateMetric('totalTime', `${Date.now() - startTime}ms`);
+                    updateMetric('retryStatus', 'Trying...');
+                    
+                    log('retryOutput', `📡 Attempt #${attempts}`);
+                    
+                    if (Math.random() > successRate) {
+                        throw new Error(`Simulated failure (attempt ${attempts})`);
+                    }
+                    
+                    return `Success on attempt ${attempts}!`;
+                }, {
+                    attempts: 5,
+                    delay: 500,
+                    onRetry: (error, attempt) => {
+                        log('retryOutput', `⚠️  Retry ${attempt}: ${error.message}`);
+                    }
+                });
+                
+                log('retryOutput', `✅ ${result}`);
+                updateStatus('retryOutput', 'Success', 'success');
+                updateMetric('retryStatus', 'Success');
+            } catch (error) {
+                log('retryOutput', `❌ Failed after all attempts: ${error.message}`);
+                updateStatus('retryOutput', 'Failed', 'error');
+                updateMetric('retryStatus', 'Failed');
+            }
+        }
+
+        async function runRetryWithBackoff() {
+            const successRate = 0.2; // Make it harder
+            const metricsDiv = document.getElementById('retryMetrics');
+            
+            log('retryOutput', '🔄 Testing retry with exponential backoff...');
+            updateStatus('retryOutput', 'Retrying with backoff...', 'running');
+            metricsDiv.style.display = 'grid';
+            
+            let attempts = 0;
+            const startTime = Date.now();
+            
+            try {
+                await delay.retry(async () => {
+                    attempts++;
+                    updateMetric('attemptCount', attempts);
+                    updateMetric('totalTime', `${Date.now() - startTime}ms`);
+                    
+                    log('retryOutput', `📡 Backoff attempt #${attempts}`);
+                    
+                    if (Math.random() > successRate) {
+                        throw new Error(`Backoff failure (attempt ${attempts})`);
+                    }
+                    
+                    return `Backoff success on attempt ${attempts}!`;
+                }, {
+                    attempts: 6,
+                    delay: 200,
+                    backoff: 'exponential',
+                    backoffFactor: 2,
+                    maxDelay: 2000,
+                    onRetry: (error, attempt) => {
+                        log('retryOutput', `⚠️  Exponential retry ${attempt}: ${error.message}`);
+                    }
+                });
+                
+                log('retryOutput', '✅ Backoff retry succeeded!');
+                updateStatus('retryOutput', 'Success', 'success');
+                updateMetric('retryStatus', 'Success');
+            } catch (error) {
+                log('retryOutput', `❌ Backoff failed: ${error.message}`);
+                updateStatus('retryOutput', 'Failed', 'error');
+                updateMetric('retryStatus', 'Failed');
+            }
+        }
+
+        function updateMetric(id, value) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        }
+
+        // Rate Limiting Demo
+        function testThrottle() {
+            log('rateLimitOutput', '🚦 Testing throttle (1 second)...');
+            
+            const throttledFunction = delay.throttle(() => {
+                throttleCount++;
+                updateMetric('throttleCount', throttleCount);
+                log('rateLimitOutput', `⚡ Throttled function executed (${throttleCount})`);
+            }, 1000);
+
+            // Call it multiple times rapidly
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    clickCount++;
+                    updateMetric('clickCount', clickCount);
+                    throttledFunction();
+                    log('rateLimitOutput', `🖱️  Click ${clickCount} (throttled)`);
+                }, i * 100);
+            }
+        }
+
+        function testDebounce() {
+            log('rateLimitOutput', '🚦 Testing debounce (500ms)...');
+            
+            const debouncedFunction = delay.debounce(() => {
+                debounceCount++;
+                updateMetric('debounceCount', debounceCount);
+                log('rateLimitOutput', `⚡ Debounced function executed (${debounceCount})`);
+            }, 500);
+
+            // Call it multiple times rapidly
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    clickCount++;
+                    updateMetric('clickCount', clickCount);
+                    debouncedFunction();
+                    log('rateLimitOutput', `🖱️  Click ${clickCount} (debounced)`);
+                }, i * 100);
+            }
+        }
+
+        function spamButtons() {
+            const btn = document.getElementById('spamBtn');
+            btn.textContent = 'Spamming...';
+            btn.disabled = true;
+            
+            const throttledSpam = delay.throttle(() => {
+                throttleCount++;
+                updateMetric('throttleCount', throttleCount);
+                log('rateLimitOutput', `⚡ Spam throttled (${throttleCount})`);
+            }, 300);
+
+            const debouncedSpam = delay.debounce(() => {
+                debounceCount++;
+                updateMetric('debounceCount', debounceCount);
+                log('rateLimitOutput', `⚡ Spam debounced (${debounceCount})`);
+            }, 200);
+
+            // Simulate rapid clicking
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    clickCount++;
+                    updateMetric('clickCount', clickCount);
+                    throttledSpam();
+                    debouncedSpam();
+                }, i * 50);
+            }
+
+            setTimeout(() => {
+                btn.textContent = 'Spam Click Me!';
+                btn.disabled = false;
+                log('rateLimitOutput', '✅ Spam test completed!');
+            }, 2000);
+        }
+
+        // Animation Demo
+        async function animateBox() {
+            const box = document.getElementById('animationBox');
+            const stopBtn = document.getElementById('stopAnimBtn');
+            
+            log('animationOutput', '🎨 Starting box animation...');
+            stopBtn.disabled = false;
+            animationController = { stopped: false };
+            
+            try {
+                for (let i = 0; i < 300 && !animationController.stopped; i += 5) {
+                    await delay.nextFrame();
+                    if (!animationController.stopped) {
+                        box.style.left = (10 + i) + 'px';
+                    }
+                }
+                
+                if (!animationController.stopped) {
+                    log('animationOutput', '✅ Animation completed!');
+                    updateStatus('animationOutput', 'Completed', 'success');
+                }
+            } catch (error) {
+                log('animationOutput', `❌ Animation error: ${error.message}`);
+                updateStatus('animationOutput', 'Error', 'error');
+            } finally {
+                stopBtn.disabled = true;
+                // Reset position
+                setTimeout(() => {
+                    box.style.left = '10px';
+                }, 1000);
+            }
+        }
+
+        async function smoothAnimation() {
+            const box = document.getElementById('animationBox');
+            const stopBtn = document.getElementById('stopAnimBtn');
+            
+            log('animationOutput', '🎨 Starting smooth animation with easing...');
+            stopBtn.disabled = false;
+            animationController = { stopped: false };
+            
+            try {
+                const duration = 2000; // 2 seconds
+                const distance = 300;
+                const startTime = performance.now();
+                
+                while (!animationController.stopped) {
+                    await delay.nextFrame();
+                    
+                    const elapsed = performance.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Ease-out cubic easing
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    const position = 10 + (distance * eased);
+                    
+                    if (!animationController.stopped) {
+                        box.style.left = position + 'px';
+                    }
+                    
+                    if (progress >= 1) break;
+                }
+                
+                if (!animationController.stopped) {
+                    log('animationOutput', '✅ Smooth animation completed!');
+                    updateStatus('animationOutput', 'Completed', 'success');
+                }
+            } catch (error) {
+                log('animationOutput', `❌ Animation error: ${error.message}`);
+                updateStatus('animationOutput', 'Error', 'error');
+            } finally {
+                stopBtn.disabled = true;
+                setTimeout(() => {
+                    box.style.left = '10px';
+                }, 1000);
+            }
+        }
+
+        function stopAnimation() {
+            if (animationController) {
+                animationController.stopped = true;
+                log('animationOutput', '🛑 Animation stopped');
+                updateStatus('animationOutput', 'Stopped', 'error');
+            }
+        }
+
+        // Plugin Demo
+        function enableLogging() {
+            // This would use the actual logging plugin
+            log('pluginOutput', '🔌 Logging plugin enabled');
+            log('pluginOutput', '📝 All delay operations will now be logged');
+            updateStatus('pluginOutput', 'Logging Active', 'running');
+        }
+
+        function enableMetrics() {
+            // This would use the actual metrics plugin
+            log('pluginOutput', '🔌 Metrics plugin enabled');
+            log('pluginOutput', '📊 Delay metrics are now being collected');
+            updateStatus('pluginOutput', 'Metrics Active', 'running');
+            document.getElementById('showMetricsBtn').disabled = false;
+        }
+
+        function showMetrics() {
+            const metricsDiv = document.getElementById('pluginMetrics');
+            metricsDiv.style.display = 'grid';
+            
+            // Simulate metrics data
+            updateMetric('totalDelays', Math.floor(Math.random() * 50) + 10);
+            updateMetric('avgDelay', Math.floor(Math.random() * 1000) + 100 + 'ms');
+            updateMetric('minDelay', Math.floor(Math.random() * 100) + 50 + 'ms');
+            updateMetric('maxDelay', Math.floor(Math.random() * 2000) + 1000 + 'ms');
+            
+            log('pluginOutput', '📊 Current metrics displayed above');
+            updateStatus('pluginOutput', 'Metrics Shown', 'success');
+        }
+
+        function clearPlugins() {
+            log('pluginOutput', '🗑️  All plugins cleared');
+            updateStatus('pluginOutput', 'Plugins Cleared', 'error');
+            document.getElementById('showMetricsBtn').disabled = true;
+            document.getElementById('pluginMetrics').style.display = 'none';
+        }
+
+        // Initialize counters
+        updateMetric('clickCount', 0);
+        updateMetric('throttleCount', 0);
+        updateMetric('debounceCount', 0);
+    </script>
+</body>
+</html>

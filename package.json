@@ -1,0 +1,92 @@
+{
+  "name": "@oxog/delay",
+  "version": "1.0.0",
+  "description": "A comprehensive, zero-dependency delay/timeout utility library with advanced timing features",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "tsc --project tsconfig.esm.json",
+    "build:cjs": "tsc --project tsconfig.cjs.json",
+    "build:types": "tsc --project tsconfig.types.json",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:memory": "node --max-old-space-size=4096 node_modules/.bin/jest",
+    "test:ci": "jest --maxWorkers=2 --forceExit",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm run test:coverage",
+    "prepack": "npm run build",
+    "postpack": "echo \"✅ Package created successfully\"",
+    "prepare": "npm run build",
+    "version": "npm run build && npm run test:coverage && git add -A",
+    "postversion": "git push && git push --tags",
+    "publish:dry": "npm publish --dry-run",
+    "publish:beta": "npm version prerelease --preid=beta && npm publish --tag beta",
+    "publish:patch": "npm version patch && npm publish",
+    "publish:minor": "npm version minor && npm publish",
+    "publish:major": "npm version major && npm publish",
+    "release": "npm run publish:patch",
+    "example": "tsx",
+    "benchmark": "node examples/advanced-usage/performance-benchmark.js",
+    "demo": "npx http-server examples/browser-usage -p 8080 -o"
+  },
+  "keywords": [
+    "delay",
+    "timeout",
+    "sleep",
+    "wait",
+    "timer",
+    "promise",
+    "async",
+    "cancellable",
+    "retry",
+    "throttle",
+    "debounce",
+    "scheduler",
+    "time",
+    "utilities"
+  ],
+  "author": "Ersin Koç",
+  "license": "MIT",
+  "homepage": "https://github.com/ersinkoc/delay#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ersinkoc/delay.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ersinkoc/delay/issues"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.5",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
