@@ -38,11 +38,7 @@ export function createRepeatDelay<T>(
     stop(): void {
       isRunning = false;
       if (timeoutId !== undefined) {
-        if (typeof timeoutId === 'number') {
-          clearTimeout(timeoutId);
-        } else {
-          clearTimeout(timeoutId);
-        }
+        clearTimeout(timeoutId);
         timeoutId = undefined;
       }
     },
@@ -92,11 +88,7 @@ export function createIntervalDelay<T>(
     stop(): void {
       isRunning = false;
       if (intervalId !== undefined) {
-        if (typeof intervalId === 'number') {
-          clearInterval(intervalId);
-        } else {
-          clearInterval(intervalId);
-        }
+        clearInterval(intervalId);
         intervalId = undefined;
       }
     },

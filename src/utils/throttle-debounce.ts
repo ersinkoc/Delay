@@ -6,13 +6,13 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
   options: ThrottleOptions = {}
 ): T {
   const { leading = true, trailing = true } = options;
-  
+
   let lastCallTime = 0;
   let lastInvokeTime = 0;
   let timerId: NodeJS.Timeout | number | undefined;
   let lastArgs: Parameters<T> | undefined;
   let lastThis: unknown;
-  let result: ReturnType<T>;
+  let result: ReturnType<T> | undefined = undefined;
 
   function invokeFunc(time: number): ReturnType<T> {
     const args = lastArgs!;
@@ -25,7 +25,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
     return result;
   }
 
-  function leadingEdge(time: number): ReturnType<T> {
+  function leadingEdge(time: number): ReturnType<T> | undefined {
     lastInvokeTime = time;
     timerId = setTimeout(timerExpired, ms);
     return leading ? invokeFunc(time) : result;
@@ -60,7 +60,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
     }
   }
 
-  function trailingEdge(time: number): ReturnType<T> {
+  function trailingEdge(time: number): ReturnType<T> | undefined {
     timerId = undefined;
 
     if (trailing && lastArgs) {
@@ -73,11 +73,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
 
   function cancel(): void {
     if (timerId !== undefined) {
-      if (typeof timerId === 'number') {
-        clearTimeout(timerId);
-      } else {
-        clearTimeout(timerId);
-      }
+      clearTimeout(timerId);
     }
     lastInvokeTime = 0;
     lastArgs = undefined;
@@ -86,11 +82,11 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
     timerId = undefined;
   }
 
-  function flush(): ReturnType<T> {
+  function flush(): ReturnType<T> | undefined {
     return timerId === undefined ? result : trailingEdge(Date.now());
   }
 
-  function throttled(this: unknown, ...args: Parameters<T>): ReturnType<T> {
+  function throttled(this: unknown, ...args: Parameters<T>): ReturnType<T> | undefined {
     const time = Date.now();
     const isInvoking = shouldInvoke(time);
 
@@ -125,14 +121,14 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
   options: DebounceOptions = {}
 ): T & { cancel(): void; flush(): void } {
   const { leading = false, trailing = true, maxWait } = options;
-  
+
   let lastCallTime = 0;
   let lastInvokeTime = 0;
   let timerId: NodeJS.Timeout | number | undefined;
   let maxTimerId: NodeJS.Timeout | number | undefined;
   let lastArgs: Parameters<T> | undefined;
   let lastThis: unknown;
-  let result: ReturnType<T>;
+  let result: ReturnType<T> | undefined = undefined;
 
   function invokeFunc(time: number): ReturnType<T> {
     const args = lastArgs!;
@@ -145,7 +141,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
     return result;
   }
 
-  function leadingEdge(time: number): ReturnType<T> {
+  function leadingEdge(time: number): ReturnType<T> | undefined {
     lastInvokeTime = time;
     timerId = setTimeout(timerExpired, ms);
     return leading ? invokeFunc(time) : result;
@@ -182,7 +178,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
     }
   }
 
-  function trailingEdge(time: number): ReturnType<T> {
+  function trailingEdge(time: number): ReturnType<T> | undefined {
     timerId = undefined;
 
     if (trailing && lastArgs) {
@@ -195,18 +191,10 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 
   function cancel(): void {
     if (timerId !== undefined) {
-      if (typeof timerId === 'number') {
-        clearTimeout(timerId);
-      } else {
-        clearTimeout(timerId);
-      }
+      clearTimeout(timerId);
     }
     if (maxTimerId !== undefined) {
-      if (typeof maxTimerId === 'number') {
-        clearTimeout(maxTimerId);
-      } else {
-        clearTimeout(maxTimerId);
-      }
+      clearTimeout(maxTimerId);
     }
     lastInvokeTime = 0;
     lastArgs = undefined;
@@ -216,11 +204,11 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
     maxTimerId = undefined;
   }
 
-  function flush(): ReturnType<T> {
+  function flush(): ReturnType<T> | undefined {
     return timerId === undefined ? result : trailingEdge(Date.now());
   }
 
-  function debounced(this: unknown, ...args: Parameters<T>): ReturnType<T> {
+  function debounced(this: unknown, ...args: Parameters<T>): ReturnType<T> | undefined {
     const time = Date.now();
     const isInvoking = shouldInvoke(time);
 

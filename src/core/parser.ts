@@ -48,27 +48,54 @@ async function conditionalDelay(
       return;
     }
 
+    let timeoutId: NodeJS.Timeout | number | undefined;
+    let isSettled = false;
+
+    const cleanup = (): void => {
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+        timeoutId = undefined;
+      }
+      if (signal) {
+        signal.removeEventListener('abort', handleAbort);
+      }
+    };
+
     const check = (): void => {
+      if (isSettled) {
+        return;
+      }
+
       if (signal?.aborted) {
+        isSettled = true;
+        cleanup();
         reject(new Error('Delay was cancelled'));
         return;
       }
 
       try {
         if (condition()) {
+          isSettled = true;
+          cleanup();
           resolve();
           return;
         }
       } catch (error) {
+        isSettled = true;
+        cleanup();
         reject(error);
         return;
       }
 
-      setTimeout(check, checkInterval);
+      timeoutId = setTimeout(check, checkInterval);
     };
 
     const handleAbort = (): void => {
-      reject(new Error('Delay was cancelled'));
+      if (!isSettled) {
+        isSettled = true;
+        cleanup();
+        reject(new Error('Delay was cancelled'));
+      }
     };
 
     signal?.addEventListener('abort', handleAbort);

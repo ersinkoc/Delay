@@ -6,12 +6,24 @@ export async function raceWithTimeout<T>(
   timeoutMs: number,
   timeoutError?: Error
 ): Promise<T> {
-  const timeoutPromise = createTimeoutPromise<T>(timeoutMs, timeoutError);
-  
+  let timeoutId: NodeJS.Timeout | number | undefined;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      const error = timeoutError || new DelayError(
+        `Operation timed out after ${timeoutMs}ms`,
+        DelayErrorCode.TIMEOUT,
+        { timeout: timeoutMs }
+      );
+      reject(error);
+    }, timeoutMs);
+  });
+
   try {
     const result = await Promise.race([...promises, timeoutPromise]);
+    clearTimeout(timeoutId);
     return result;
   } catch (error) {
+    clearTimeout(timeoutId);
     throw error;
   }
 }
@@ -52,7 +64,7 @@ export async function raceArray<T>(
   } = {}
 ): Promise<T> {
   const { timeout, timeoutError, failFast = true } = options;
-  
+
   if (promises.length === 0) {
     throw new DelayError(
       'Cannot race empty array of promises',
@@ -62,28 +74,62 @@ export async function raceArray<T>(
   }
 
   const racePromises = [...promises];
-  
+  let timeoutId: NodeJS.Timeout | number | undefined;
+
   if (timeout !== undefined) {
-    racePromises.push(createTimeoutPromise(timeout, timeoutError));
+    const timeoutPromise = new Promise<T>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        const error = timeoutError || new DelayError(
+          `Operation timed out after ${timeout}ms`,
+          DelayErrorCode.TIMEOUT,
+          { timeout }
+        );
+        reject(error);
+      }, timeout);
+    });
+    racePromises.push(timeoutPromise);
   }
 
   if (failFast) {
-    return Promise.race(racePromises);
+    try {
+      const result = await Promise.race(racePromises);
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+      return result;
+    } catch (error) {
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+      throw error;
+    }
   }
 
   // If not fail-fast, wait for the first successful result
   return new Promise<T>((resolve, reject) => {
     let rejectionCount = 0;
-    const errors: Error[] = [];
+    const errors: Error[] = new Array(racePromises.length);
+    let isSettled = false;
 
     racePromises.forEach((promise, index) => {
       promise
-        .then(result => resolve(result))
+        .then(result => {
+          if (!isSettled) {
+            isSettled = true;
+            if (timeoutId !== undefined) {
+              clearTimeout(timeoutId);
+            }
+            resolve(result);
+          }
+        })
         .catch(error => {
           errors[index] = error;
           rejectionCount++;
-          
+
           if (rejectionCount === racePromises.length) {
+            if (timeoutId !== undefined) {
+              clearTimeout(timeoutId);
+            }
             reject(new DelayError(
               'All promises rejected',
               DelayErrorCode.RETRY_EXHAUSTED,

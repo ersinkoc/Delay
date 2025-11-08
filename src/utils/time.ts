@@ -56,11 +56,19 @@ export function parseTimeString(timeString: string): number {
   let totalMs = 0;
 
   for (const match of matches) {
-    const value = parseFloat(match[1]!);
-    const unitStr = match[2]!;
-    
+    if (!match[1] || !match[2]) {
+      throw new DelayError(
+        `Invalid time string format: ${timeString}`,
+        DelayErrorCode.INVALID_TIME_STRING,
+        { timeString, match }
+      );
+    }
+
+    const value = parseFloat(match[1]);
+    const unitStr = match[2];
+
     let unit: TimeUnit;
-    
+
     // Normalize unit names
     switch (unitStr) {
       case 'ms':
@@ -120,8 +128,16 @@ export function parseTimeUntil(target: string): number {
     );
   }
 
-  let hours = parseInt(match[1]!, 10);
-  const minutes = parseInt(match[2]!, 10);
+  if (!match[1] || !match[2]) {
+    throw new DelayError(
+      `Invalid time format: ${target}. Missing hours or minutes`,
+      DelayErrorCode.INVALID_TIME_STRING,
+      { target, match }
+    );
+  }
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
   const ampm = match[3]?.toLowerCase();
 
   if (minutes < 0 || minutes > 59) {

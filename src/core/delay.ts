@@ -37,18 +37,10 @@ export function createBasicDelay(ms: number, options: DelayOptions = {}): Promis
     let isResolved = false;
 
     const cleanup = (): void => {
-      if (typeof timeoutId === 'number') {
-        clearTimeout(timeoutId);
-      } else {
-        clearTimeout(timeoutId);
-      }
-      
+      clearTimeout(timeoutId);
+
       if (progressIntervalId !== undefined) {
-        if (typeof progressIntervalId === 'number') {
-          clearInterval(progressIntervalId);
-        } else {
-          clearInterval(progressIntervalId);
-        }
+        clearInterval(progressIntervalId);
       }
     };
 
@@ -79,15 +71,9 @@ export function createBasicDelay(ms: number, options: DelayOptions = {}): Promis
           const elapsed = getHighResolutionTime() - startTime;
           const clampedElapsed = Math.min(elapsed, ms);
           onProgress(clampedElapsed, ms);
-          
-          if (elapsed >= ms) {
-            if (progressIntervalId !== undefined) {
-              if (typeof progressIntervalId === 'number') {
-                clearInterval(progressIntervalId);
-              } else {
-                clearInterval(progressIntervalId);
-              }
-            }
+
+          if (elapsed >= ms && progressIntervalId !== undefined) {
+            clearInterval(progressIntervalId);
           }
         }
       };

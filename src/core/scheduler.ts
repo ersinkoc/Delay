@@ -1,4 +1,4 @@
-import { BatchScheduler, BatchDelayOptions } from '../types/index.js';
+import { BatchScheduler, BatchDelayOptions, DelayError, DelayErrorCode } from '../types/index.js';
 import { getHighResolutionTime } from '../utils/time.js';
 import { createBasicDelay } from './delay.js';
 
@@ -68,11 +68,7 @@ export function createBatchScheduler(options: BatchDelayOptions = {}): BatchSche
 
     flush(): void {
       if (batchTimeoutId !== undefined) {
-        if (typeof batchTimeoutId === 'number') {
-          clearTimeout(batchTimeoutId);
-        } else {
-          clearTimeout(batchTimeoutId);
-        }
+        clearTimeout(batchTimeoutId);
         batchTimeoutId = undefined;
       }
       void processBatch();
@@ -80,14 +76,10 @@ export function createBatchScheduler(options: BatchDelayOptions = {}): BatchSche
 
     clear(): void {
       if (batchTimeoutId !== undefined) {
-        if (typeof batchTimeoutId === 'number') {
-          clearTimeout(batchTimeoutId);
-        } else {
-          clearTimeout(batchTimeoutId);
-        }
+        clearTimeout(batchTimeoutId);
         batchTimeoutId = undefined;
       }
-      
+
       // Reject all pending delays
       const error = new Error('Batch scheduler cleared');
       pendingDelays.forEach(item => item.reject(error));
@@ -100,21 +92,30 @@ export function createBatchScheduler(options: BatchDelayOptions = {}): BatchSche
 export async function preciseDelay(ms: number): Promise<void> {
   const startTime = getHighResolutionTime();
   let remaining = ms;
-  
+
   // Use a combination of setTimeout and busy waiting for high precision
   const threshold = 4; // Switch to busy waiting when less than 4ms remain
-  
+
   while (remaining > threshold) {
     const sleepTime = Math.min(remaining - threshold, 15); // Sleep in chunks
     await createBasicDelay(sleepTime);
-    
+
     const elapsed = getHighResolutionTime() - startTime;
     remaining = ms - elapsed;
   }
-  
-  // Busy wait for the remaining time
+
+  // Busy wait for the remaining time with safety limit
+  const maxIterations = 10000000; // Safety limit to prevent infinite loops
+  let iterations = 0;
   while (getHighResolutionTime() - startTime < ms) {
-    // Busy wait - this is intentionally blocking for precision
+    iterations++;
+    if (iterations > maxIterations) {
+      throw new DelayError(
+        'Busy wait exceeded maximum iterations - possible time measurement issue',
+        DelayErrorCode.TIMEOUT,
+        { ms, iterations, elapsed: getHighResolutionTime() - startTime }
+      );
+    }
   }
 }
 
@@ -157,10 +158,6 @@ export function createDriftCompensatedTimer(
   timeoutId = setTimeout(tick, interval);
   
   return (): void => {
-    if (typeof timeoutId === 'number') {
-      clearTimeout(timeoutId);
-    } else {
-      clearTimeout(timeoutId);
-    }
+    clearTimeout(timeoutId);
   };
 }
