@@ -33,10 +33,21 @@ export function createCancellableDelay<T = void>(
   }
 
   // Listen for abort on the original signal
-  options.signal?.addEventListener('abort', () => {
+  const abortHandler = (): void => {
     isCancelled = true;
     controller.abort();
-  });
+  };
+
+  if (options.signal) {
+    options.signal.addEventListener('abort', abortHandler);
+
+    // Clean up event listener when promise settles
+    delayPromise.finally(() => {
+      options.signal?.removeEventListener('abort', abortHandler);
+    }).catch(() => {
+      // Ignore errors in finally cleanup
+    });
+  }
 
   return cancellablePromise;
 }

@@ -59,19 +59,33 @@ export function idle(options: IdleRequestOptions = {}): Promise<IdleDeadline> {
   }
 
   return new Promise<IdleDeadline>((resolve, reject) => {
-    const id = requestIdleCallback(resolve, options);
-    
+    let isSettled = false;
+    let timeoutId: NodeJS.Timeout | number | undefined;
+
+    const id = requestIdleCallback((deadline) => {
+      if (!isSettled) {
+        isSettled = true;
+        if (timeoutId !== undefined) {
+          clearTimeout(timeoutId);
+        }
+        resolve(deadline);
+      }
+    }, options);
+
     // Optional timeout handling
     if (options.timeout) {
-      setTimeout(() => {
-        if (typeof cancelIdleCallback !== 'undefined') {
-          cancelIdleCallback(id);
+      timeoutId = setTimeout(() => {
+        if (!isSettled) {
+          isSettled = true;
+          if (typeof cancelIdleCallback !== 'undefined') {
+            cancelIdleCallback(id);
+          }
+          reject(new DelayError(
+            `Idle callback timed out after ${options.timeout}ms`,
+            DelayErrorCode.TIMEOUT,
+            { timeout: options.timeout }
+          ));
         }
-        reject(new DelayError(
-          `Idle callback timed out after ${options.timeout}ms`,
-          DelayErrorCode.TIMEOUT,
-          { timeout: options.timeout }
-        ));
       }, options.timeout);
     }
   });
