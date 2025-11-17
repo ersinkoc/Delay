@@ -14,8 +14,12 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
   let lastThis: unknown;
   let result: ReturnType<T> | undefined = undefined;
 
-  function invokeFunc(time: number): ReturnType<T> {
-    const args = lastArgs!;
+  function invokeFunc(time: number): ReturnType<T> | undefined {
+    if (!lastArgs) {
+      return result;
+    }
+
+    const args = lastArgs;
     const thisArg = lastThis;
 
     lastArgs = undefined;
@@ -90,7 +94,9 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
     const time = Date.now();
     const isInvoking = shouldInvoke(time);
 
+    // Store context for later invocation
     lastArgs = args;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     lastThis = this;
     lastCallTime = time;
 
@@ -130,8 +136,12 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
   let lastThis: unknown;
   let result: ReturnType<T> | undefined = undefined;
 
-  function invokeFunc(time: number): ReturnType<T> {
-    const args = lastArgs!;
+  function invokeFunc(time: number): ReturnType<T> | undefined {
+    if (!lastArgs) {
+      return result;
+    }
+
+    const args = lastArgs;
     const thisArg = lastThis;
 
     lastArgs = undefined;
@@ -212,7 +222,9 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
     const time = Date.now();
     const isInvoking = shouldInvoke(time);
 
+    // Store context for later invocation
     lastArgs = args;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     lastThis = this;
     lastCallTime = time;
 

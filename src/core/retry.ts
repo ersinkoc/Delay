@@ -20,7 +20,7 @@ export async function retryDelay<T>(
     retryIf,
   } = options;
 
-  let lastError: Error;
+  let lastError: Error | undefined;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
@@ -78,8 +78,12 @@ export async function retryDelay<T>(
     }
   }
 
-  // This should never be reached, but TypeScript needs it
-  throw lastError!;
+  // This should never be reached due to validation (attempts >= 1), but provide fallback
+  throw lastError || new DelayError(
+    'Retry failed with unknown error',
+    DelayErrorCode.RETRY_EXHAUSTED,
+    { attempts }
+  );
 }
 
 export function createRetryWithDefaults(defaultOptions: Partial<RetryOptions>) {

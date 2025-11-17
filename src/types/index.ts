@@ -21,6 +21,11 @@ export interface RetryOptions {
   retryIf?: (error: Error) => boolean;
 }
 
+export interface RepeatOptions {
+  onError?: (error: Error) => void;
+  stopOnError?: boolean;
+}
+
 export interface RepeatController {
   stop(): void;
   pause(): void;
@@ -75,7 +80,7 @@ export interface DelayInstance {
   while(predicate: () => boolean, options?: DelayOptions): Promise<void>;
   cancellable<T = void>(ms: number, options?: DelayOptions): CancellableDelay<T>;
   retry<T>(fn: () => T | Promise<T>, options: RetryOptions): Promise<T>;
-  repeat<T>(fn: () => T | Promise<T>, interval: number): RepeatController;
+  repeat<T>(fn: () => T | Promise<T>, interval: number, options?: RepeatOptions): RepeatController;
   random(ms: number, options?: RandomDelayOptions): Promise<void>;
   between(min: number, max: number): Promise<void>;
   precise(ms: number): Promise<void>;

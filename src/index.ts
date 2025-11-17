@@ -4,6 +4,7 @@ import {
   CancellableDelay,
   RetryOptions,
   RepeatController,
+  RepeatOptions,
   RandomDelayOptions,
   BatchDelayOptions,
   ThrottleOptions,
@@ -95,8 +96,8 @@ class DelayImplementation {
   }
 
   // Repeating delays
-  repeat<T>(fn: () => T | Promise<T>, interval: number): RepeatController {
-    return createRepeatDelay(fn, interval);
+  repeat<T>(fn: () => T | Promise<T>, interval: number, options?: RepeatOptions): RepeatController {
+    return createRepeatDelay(fn, interval, options);
   }
 
   // Randomization
@@ -176,18 +177,22 @@ function createDelayInstance(): DelayInstance {
   // Copy all methods to the function, excluding the internal delay method
   const propertiesToCopy = Object.getOwnPropertyNames(Object.getPrototypeOf(instance))
     .filter(name => name !== 'constructor' && name !== 'delay');
-  
+
+  // Use Record type for safer dynamic property assignment
+  const delayWithMethods = delay as unknown as Record<string, unknown>;
+
   propertiesToCopy.forEach(name => {
     const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(instance), name);
     if (descriptor && typeof descriptor.value === 'function') {
-      (delay as any)[name] = descriptor.value.bind(instance);
+      delayWithMethods[name] = descriptor.value.bind(instance);
     }
   });
 
   // Also copy any instance properties
+  const instanceRecord = instance as unknown as Record<string, unknown>;
   Object.keys(instance).forEach(key => {
     if (key !== 'pluginManager') {
-      (delay as any)[key] = (instance as any)[key];
+      delayWithMethods[key] = instanceRecord[key];
     }
   });
 

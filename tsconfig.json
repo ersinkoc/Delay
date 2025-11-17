@@ -21,6 +21,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
+    "types": ["node", "jest"],
     "typeRoots": ["./node_modules/@types"]
   },
   "include": ["src/**/*"],

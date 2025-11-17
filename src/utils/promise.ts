@@ -154,12 +154,12 @@ export async function sequential<T>(
 ): Promise<T[]> {
   const results: T[] = [];
   
-  for (let i = 0; i < factories.length; i++) {
+  for (const [i, factory] of factories.entries()) {
     if (i > 0 && delayBetween > 0) {
       await createBasicDelay(delayBetween);
     }
-    
-    const result = await factories[i]!();
+
+    const result = await factory();
     results.push(result);
   }
   
@@ -188,7 +188,10 @@ export async function parallel<T>(
   const worker = async (): Promise<void> => {
     while (index < factories.length) {
       const currentIndex = index++;
-      results[currentIndex] = await factories[currentIndex]!();
+      const factory = factories[currentIndex];
+      if (factory) {
+        results[currentIndex] = await factory();
+      }
     }
   };
 
