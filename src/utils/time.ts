@@ -187,11 +187,17 @@ export function getHighResolutionTime(): number {
   if (typeof performance !== 'undefined' && performance.now) {
     return performance.now();
   }
-  
+
   if (typeof process !== 'undefined' && process.hrtime) {
+    // Prefer process.hrtime.bigint() when available (Node.js 10.7.0+)
+    if (process.hrtime.bigint) {
+      const hrtime = process.hrtime.bigint();
+      return Number(hrtime) / 1000000; // Convert nanoseconds to milliseconds
+    }
+    // Fallback to deprecated process.hrtime() for older Node.js versions
     const hr = process.hrtime();
     return hr[0] * 1000 + hr[1] / 1000000;
   }
-  
+
   return Date.now();
 }

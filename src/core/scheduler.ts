@@ -15,10 +15,12 @@ export function createBatchScheduler(options: BatchDelayOptions = {}): BatchSche
   let isProcessing = false;
 
   const processBatch = async (): Promise<void> => {
+    // Guard against concurrent execution and empty queue
     if (isProcessing || pendingDelays.length === 0) {
       return;
     }
 
+    // Set processing flag immediately to prevent re-entry
     isProcessing = true;
     batchTimeoutId = undefined;
 
@@ -148,10 +150,24 @@ export function createDriftCompensatedTimer(
     const target = start + count * interval;
     const current = getHighResolutionTime();
     const drift = current - target;
-    
+
+    // Detect if time went backwards (drift is very negative)
+    if (drift < -interval) {
+      console.warn('System time appears to have jumped backwards, resetting drift compensation');
+      // Reset the timer base to current time
+      const newStart = current - count * interval;
+      const adjustedTarget = newStart + count * interval;
+      const adjustedDrift = current - adjustedTarget;
+      const nextInterval = Math.max(0, Math.min(interval * 2, interval - adjustedDrift));
+      callback();
+      timeoutId = setTimeout(tick, nextInterval);
+      return;
+    }
+
     callback();
-    
-    const nextInterval = Math.max(0, interval - drift);
+
+    // Clamp nextInterval to reasonable bounds (0 to 2x interval)
+    const nextInterval = Math.max(0, Math.min(interval * 2, interval - drift));
     timeoutId = setTimeout(tick, nextInterval);
   };
   

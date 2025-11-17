@@ -1,4 +1,4 @@
-import { DelayPlugin, DelayInstance } from '../types/index.js';
+import { DelayPlugin, DelayInstance, DelayOptions } from '../types/index.js';
 
 export class PluginManager {
   private plugins: Map<string, DelayPlugin> = new Map();
@@ -81,19 +81,22 @@ export function createLoggingPlugin(): DelayPlugin {
     version: '1.0.0',
     init(delay: DelayInstance): void {
       const originalDelay = delay.bind({});
-      
+
       // Override the main delay function to add logging
-      Object.assign(delay, function(ms: number, options?: any) {
+      Object.assign(delay, function(ms: number, options?: DelayOptions) {
+        // eslint-disable-next-line no-console
         console.log(`[delay] Starting delay of ${ms}ms`);
         const start = Date.now();
-        
+
         return originalDelay(ms, options).then(() => {
           const actual = Date.now() - start;
+          // eslint-disable-next-line no-console
           console.log(`[delay] Delay completed in ${actual}ms (target: ${ms}ms)`);
         });
       });
     },
     destroy(): void {
+      // eslint-disable-next-line no-console
       console.log('[delay] Logging plugin destroyed');
     },
   };
@@ -113,13 +116,13 @@ export function createMetricsPlugin(): DelayPlugin {
     version: '1.0.0',
     init(delay: DelayInstance): void {
       const originalDelay = delay.bind({});
-      
-      Object.assign(delay, function(ms: number, options?: any) {
+
+      Object.assign(delay, function(ms: number, options?: DelayOptions) {
         const start = Date.now();
         metrics.totalDelays++;
         metrics.minDelay = Math.min(metrics.minDelay, ms);
         metrics.maxDelay = Math.max(metrics.maxDelay, ms);
-        
+
         return originalDelay(ms, options).then(() => {
           const actual = Date.now() - start;
           metrics.totalTime += actual;
@@ -128,7 +131,8 @@ export function createMetricsPlugin(): DelayPlugin {
       });
 
       // Add metrics accessor to delay instance
-      (delay as any).getMetrics = () => ({ ...metrics });
+      const delayWithMetrics = delay as unknown as Record<string, unknown>;
+      delayWithMetrics['getMetrics'] = (): typeof metrics => ({ ...metrics });
     },
     destroy(): void {
       // Reset metrics
@@ -149,24 +153,30 @@ export function createDebugPlugin(): DelayPlugin {
     version: '1.0.0',
     init(delay: DelayInstance): void {
       // Add debug information to the delay instance
-      (delay as any).debug = {
+      const delayWithDebug = delay as unknown as Record<string, unknown>;
+      const debugObj = {
         isDebugMode: true,
-        logLevel: 'info',
+        logLevel: 'info' as 'debug' | 'info' | 'warn' | 'error',
         setLogLevel(level: 'debug' | 'info' | 'warn' | 'error'): void {
-          this.logLevel = level;
+          debugObj.logLevel = level;
         },
-        log(level: string, message: string, data?: any): void {
-          if (this.isDebugMode) {
-            if (data !== undefined) {
-              (console as any)[level]?.(`[delay:${level}] ${message}`, data);
-            } else {
-              (console as any)[level]?.(`[delay:${level}] ${message}`);
+        log(level: string, message: string, data?: unknown): void {
+          if (debugObj.isDebugMode) {
+            const consoleFn = (console as unknown as Record<string, unknown>)[level];
+            if (typeof consoleFn === 'function') {
+              if (data !== undefined) {
+                (consoleFn as (...args: unknown[]) => void)(`[delay:${level}] ${message}`, data);
+              } else {
+                (consoleFn as (...args: unknown[]) => void)(`[delay:${level}] ${message}`);
+              }
             }
           }
         },
       };
+      delayWithDebug['debug'] = debugObj;
     },
     destroy(): void {
+      // eslint-disable-next-line no-console
       console.log('[delay] Debug plugin destroyed');
     },
   };

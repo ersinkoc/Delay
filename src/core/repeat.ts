@@ -1,13 +1,15 @@
-import { RepeatController } from '../types/index.js';
+import { RepeatController, RepeatOptions } from '../types/index.js';
 import { validateFunction, validateDelay } from '../utils/validation.js';
 
 export function createRepeatDelay<T>(
   fn: () => T | Promise<T>,
-  interval: number
+  interval: number,
+  options: RepeatOptions = {}
 ): RepeatController {
   validateFunction(fn, 'repeat function');
   validateDelay(interval);
 
+  const { onError, stopOnError = false } = options;
   let isRunning = true;
   let isPaused = false;
   let timeoutId: NodeJS.Timeout | number | undefined;
@@ -21,8 +23,25 @@ export function createRepeatDelay<T>(
       try {
         await fn();
       } catch (error) {
-        // Continue repeating even if the function throws an error
-        console.error('Error in repeat function:', error);
+        const err = error instanceof Error ? error : new Error(String(error));
+
+        // Call error handler if provided
+        if (onError) {
+          try {
+            onError(err);
+          } catch (handlerError) {
+            console.error('Error in repeat error handler:', handlerError);
+          }
+        } else {
+          // Default behavior: log to console
+          console.error('Error in repeat function:', err);
+        }
+
+        // Stop if requested
+        if (stopOnError) {
+          isRunning = false;
+          return;
+        }
       }
     }
 
@@ -63,11 +82,13 @@ export function createRepeatDelay<T>(
 
 export function createIntervalDelay<T>(
   fn: () => T | Promise<T>,
-  interval: number
+  interval: number,
+  options: RepeatOptions = {}
 ): RepeatController {
   validateFunction(fn, 'interval function');
   validateDelay(interval);
 
+  const { onError, stopOnError = false } = options;
   let isRunning = true;
   let isPaused = false;
   let intervalId: NodeJS.Timeout | number | undefined;
@@ -77,7 +98,28 @@ export function createIntervalDelay<T>(
       try {
         await fn();
       } catch (error) {
-        console.error('Error in interval function:', error);
+        const err = error instanceof Error ? error : new Error(String(error));
+
+        // Call error handler if provided
+        if (onError) {
+          try {
+            onError(err);
+          } catch (handlerError) {
+            console.error('Error in interval error handler:', handlerError);
+          }
+        } else {
+          // Default behavior: log to console
+          console.error('Error in interval function:', err);
+        }
+
+        // Stop if requested
+        if (stopOnError) {
+          isRunning = false;
+          if (intervalId !== undefined) {
+            clearInterval(intervalId);
+            intervalId = undefined;
+          }
+        }
       }
     }
   };

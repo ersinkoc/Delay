@@ -16,7 +16,11 @@ export function untilDelay(
   }
 
   if (target instanceof Date) {
-    const ms = Math.max(0, target.getTime() - Date.now());
+    const delay = target.getTime() - Date.now();
+    if (delay < 0) {
+      console.warn(`delay.until() target date is in the past by ${Math.abs(delay)}ms, resolving immediately`);
+    }
+    const ms = Math.max(0, delay);
     return createBasicDelay(ms, options);
   }
 
