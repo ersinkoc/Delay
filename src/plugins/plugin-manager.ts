@@ -1,4 +1,4 @@
-import { DelayPlugin, DelayInstance, DelayOptions } from '../types/index.js';
+import { DelayPlugin, DelayInstance, DelayOptions, DelayError, DelayErrorCode } from '../types/index.js';
 
 export class PluginManager {
   private plugins: Map<string, DelayPlugin> = new Map();
@@ -10,7 +10,12 @@ export class PluginManager {
 
   register(plugin: DelayPlugin): void {
     if (this.plugins.has(plugin.name)) {
-      throw new Error(`Plugin with name "${plugin.name}" is already registered`);
+      // BUG-007 FIX: Use DelayError instead of generic Error
+      throw new DelayError(
+        `Plugin with name "${plugin.name}" is already registered`,
+        DelayErrorCode.INVALID_OPTIONS,
+        { pluginName: plugin.name }
+      );
     }
 
     this.plugins.set(plugin.name, plugin);
@@ -23,7 +28,12 @@ export class PluginManager {
   unregister(pluginName: string): void {
     const plugin = this.plugins.get(pluginName);
     if (!plugin) {
-      throw new Error(`Plugin with name "${pluginName}" is not registered`);
+      // BUG-008 FIX: Use DelayError instead of generic Error
+      throw new DelayError(
+        `Plugin with name "${pluginName}" is not registered`,
+        DelayErrorCode.INVALID_OPTIONS,
+        { pluginName }
+      );
     }
 
     if (plugin.destroy) {
@@ -60,7 +70,11 @@ export class PluginManager {
 
   initializeAll(): void {
     if (!this.delayInstance) {
-      throw new Error('Delay instance not set');
+      // BUG-009 FIX: Use DelayError instead of generic Error
+      throw new DelayError(
+        'Delay instance not set',
+        DelayErrorCode.INVALID_OPTIONS
+      );
     }
 
     for (const plugin of this.plugins.values()) {

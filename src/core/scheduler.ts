@@ -154,13 +154,10 @@ export function createDriftCompensatedTimer(
     // Detect if time went backwards (drift is very negative)
     if (drift < -interval) {
       console.warn('System time appears to have jumped backwards, resetting drift compensation');
-      // Reset the timer base to current time
-      const newStart = current - count * interval;
-      const adjustedTarget = newStart + count * interval;
-      const adjustedDrift = current - adjustedTarget;
-      const nextInterval = Math.max(0, Math.min(interval * 2, interval - adjustedDrift));
+      // When time jumps backwards, use the standard interval without drift compensation
+      // (BUG-001 FIX: Previous logic had adjustedDrift always equal 0 due to math cancellation)
       callback();
-      timeoutId = setTimeout(tick, nextInterval);
+      timeoutId = setTimeout(tick, interval);
       return;
     }
 
