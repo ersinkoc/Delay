@@ -234,7 +234,10 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
       }
       if (maxWait !== undefined) {
         timerId = setTimeout(timerExpired, ms);
-        maxTimerId = setTimeout(timerExpired, maxWait);
+        // BUG-002 FIX: Calculate remaining maxWait time from last invoke, not full maxWait
+        const timeSinceLastInvoke = time - lastInvokeTime;
+        const remainingMaxWait = Math.max(0, maxWait - timeSinceLastInvoke);
+        maxTimerId = setTimeout(timerExpired, remainingMaxWait);
         return leading ? invokeFunc(lastCallTime) : result;
       }
     }

@@ -1,4 +1,4 @@
-import { DelayOptions } from '../types/index.js';
+import { DelayOptions, DelayError, DelayErrorCode } from '../types/index.js';
 import { parseTimeString, parseTimeUntil } from '../utils/time.js';
 import { createBasicDelay } from './delay.js';
 
@@ -29,7 +29,12 @@ export function untilDelay(
     return createBasicDelay(ms, options);
   }
 
-  throw new Error('Invalid target type for until delay');
+  // BUG-003 FIX: Use DelayError instead of generic Error
+  throw new DelayError(
+    'Invalid target type for until delay',
+    DelayErrorCode.INVALID_OPTIONS,
+    { target: typeof target }
+  );
 }
 
 export function whileDelay(
@@ -48,7 +53,8 @@ async function conditionalDelay(
 
   return new Promise<void>((resolve, reject) => {
     if (signal?.aborted) {
-      reject(new Error('Delay was aborted'));
+      // BUG-004 FIX: Use DelayError instead of generic Error
+      reject(new DelayError('Delay was aborted', DelayErrorCode.CANCELLED));
       return;
     }
 
@@ -73,7 +79,8 @@ async function conditionalDelay(
       if (signal?.aborted) {
         isSettled = true;
         cleanup();
-        reject(new Error('Delay was cancelled'));
+        // BUG-005 FIX: Use DelayError instead of generic Error
+        reject(new DelayError('Delay was cancelled', DelayErrorCode.CANCELLED));
         return;
       }
 
@@ -98,7 +105,8 @@ async function conditionalDelay(
       if (!isSettled) {
         isSettled = true;
         cleanup();
-        reject(new Error('Delay was cancelled'));
+        // BUG-006 FIX: Use DelayError instead of generic Error
+        reject(new DelayError('Delay was cancelled', DelayErrorCode.CANCELLED));
       }
     };
 
